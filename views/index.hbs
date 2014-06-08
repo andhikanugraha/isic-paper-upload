@@ -1,1 +1,11 @@
 <p class="lead">Select your file and click Submit.</p>
+
+<form role="form" class="form" method="POST" enctype="multipart/form-data" action="/upload?_csrf={{safeCsrf}}">
+  <div class="form-group">
+    <label for="inputFile">Full paper</label>
+    <input type="file" id="inputFile" name="file">
+  </div>
+  <div class="form-group">
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </div>
+</form>

@@ -86,7 +86,7 @@ app.post('/', function handlePost(req, res, next) {
       res.render('upload');
     }
     else {
-      res.render('index');
+      res.render('index', { csrf: req.csrfToken(), safeCsrf: encodeURIComponent(req.csrfToken()) });
     }
   }
 });
@@ -95,7 +95,7 @@ app.post('/upload', function handleUpload(req, res, next) {
   var uploadErr = false;
 
   if (uploadErr) {
-    res.render('index', { error: uploadErr });
+    res.render('index', { error: uploadErr, csrf: req.csrfToken(), safeCsrf: encodeURIComponent(req.csrfToken()) });
   }
   else {
     res.render('upload', { justUploaded: true });
