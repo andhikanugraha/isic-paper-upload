@@ -9,15 +9,19 @@
     "cookie-parser": "^1.1.0",
     "csurf": "^1.2.0",
     "dropbox": "^0.10.2",
+    "errorhandler": "^1.0.2",
     "express": "^4.4.1",
+    "express-session": "^1.2.1",
     "formidable": "^1.0.14",
     "hbs": "^2.7.0",
+    "hiredis": "^0.1.17",
     "js-yaml": "^3.0.2",
     "less-middleware": "^1.0.3",
     "lodash": "^2.4.1",
     "method-override": "^2.0.2",
     "moment": "^2.6.0",
     "morgan": "^1.1.1",
+    "redis": "^0.10.3",
     "serve-static": "^1.2.1"
   }
 }
