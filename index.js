@@ -3,6 +3,7 @@
 // Modules
 var config = require('config');
 var formidable = require('formidable');
+var sha1 = require('sha1');
 var dropbox = require('dropbox');
 var express = require('express');
 var morgan = require('morgan');
@@ -19,9 +20,21 @@ var lessMiddleware = require('less-middleware');
 // User data
 var users = {
   'someone@localhost': {
-    passwordHash: ''
+    name: 'John Doe',
+    passwordHash: '59b3e8d637cf97edbe2384cf59cb7453dfe30789', // password
+    salt: 'salt'
   }
 };
+
+// User functions
+function checkUserAuth(email, password) {
+  var user = users[email];
+  var salt = user.salt;
+  var saltedPassword = '' + salt + password;
+  var saltedPasswordHash = sha1(saltedPassword);
+
+  return user.passwordHash === saltedPasswordHash;
+}
 
 // Config initialisation
 if (!config.port) {
@@ -68,38 +81,61 @@ app.use('/css', lessMiddleware(
 ));
 app.use(serveStatic(__dirname + '/public'));
 
-// Actions
-app.get('/', function handleGet(req, res, next) {
-  // Display login form
-  res.render('login', { csrf: req.csrfToken() });
-});
-app.post('/', function handlePost(req, res, next) {
-  // Display upload interface
-  var loginErr = false;
-  var alreadyUploaded = false;
-
-  if (loginErr) {
-    res.render('login', { csrf: req.csrfToken() });
+// Custom middleware
+function requireAuth(req, res, next) {
+  if (!req.session.email) {
+    res.redirect('/?error=unauth');
   }
   else {
-    if (alreadyUploaded) {
-      res.render('upload');
-    }
-    else {
-      res.render('index', {
-        csrf: req.csrfToken(),
-        safeCsrf: encodeURIComponent(req.csrfToken())
-      });
-    }
+    req.user = users[req.session.email];
+    next();
+  }
+}
+
+// Actions
+app.get('/', function login(req, res, next) {
+  // Display login form
+  req.session.email = undefined;
+
+  res.render('login', {
+    csrf: req.csrfToken(),
+    noauth: req.query.error === 'noauth'
+  });
+});
+
+app.post('/', function handleLogin(req, res, next) {
+  // Display upload interface
+  var email = req.body.email;
+  var password = req.body.password;
+
+  if (checkUserAuth(email, password)) {
+    req.session.email = email;
+    res.redirect('/upload');
+  }
+  else {
+    res.render('login', {
+      error: 'invalid_auth',
+      csrf: req.csrfToken()
+    });
   }
 });
-app.post('/upload', function handleUpload(req, res, next) {
+
+app.get('/upload', requireAuth, function index(req, res, next) {
+  res.render('index', {
+    user: req.user,
+    csrf: req.csrfToken(),
+    safeCsrf: encodeURIComponent(req.csrfToken())
+  });
+})
+
+app.post('/upload', requireAuth, function handleUpload(req, res, next) {
   // Display post-upload interface
   var uploadErr = false;
 
   if (uploadErr) {
     res.render('index', {
       error: uploadErr,
+      user: req.user,
       csrf: req.csrfToken(),
       safeCsrf: encodeURIComponent(req.csrfToken())
     });

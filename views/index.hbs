@@ -1,4 +1,4 @@
-<p class="lead">Select your file and click Submit.</p>
+<p class="lead">Welcome, <strong>{{user.name}}</strong>. Select your full paper file and click <strong>Submit</strong> to upload.</p>
 
 <form role="form" class="form" method="POST" enctype="multipart/form-data" action="/upload?_csrf={{safeCsrf}}">
   <div class="form-group">
