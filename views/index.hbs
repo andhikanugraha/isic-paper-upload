@@ -1,7 +1,7 @@
 <p class="lead">Welcome, <strong>{{user.name}}</strong>.</p>
 
 {{#if confirmed}}
-<h2>Submission confirmed</h2>
+<h3>Submission confirmed</h3>
 <p>You have already confirmed your submission, and you may not upload new versions.</p>
 <p><a class="btn btn-default" href="/review">View submission</a></p>
 
@@ -9,13 +9,13 @@
 
 {{#if overdue}}
 
-<h2>No more submissions allowed</h2>
+<h3>No more submissions allowed</h3>
 <p>Unfortunately, the deadline for submissions has elapsed. As such, we are unable to accept your submission.</p>
 
 {{else}}
 
-{{#if true}}
-<h2>Confirm submission</h2>
+{{#if alreadyUploaded}}
+<h3>Confirm submission</h3>
 <p>You have previously uploaded a submission. Verify the correctness of your submission below and click <strong>Confirm submission</strong> to confirm. After confirming, you may not upload new versions.</p>
 
 <form class="form-horizontal" role="form" method="POST" action="/confirm">
@@ -23,12 +23,6 @@
     <label class="col-sm-2 control-label">Author</label>
     <div class="col-sm-10">
       <p class="form-control-static">{{user.name}} ({{user.email}})</p>
-    </div>
-  </div>
-  <div class="form-group">
-    <label class="col-sm-2 control-label">Email</label>
-    <div class="col-sm-10">
-      <p class="form-control-static">{{user.email}}</p>
     </div>
   </div>
   <div class="form-group">
@@ -54,7 +48,7 @@
 
 {{/if}}
 
-<h2>Upload new version</h2>
+<h3>Upload new version</h3>
 <p>Select your full paper file and click <strong>Submit</strong> to upload.</p>
 
 <form role="form" class="form-horizontal" method="POST" enctype="multipart/form-data" action="/upload?_csrf={{safeCsrf}}">
@@ -68,6 +62,12 @@
     <label class="col-sm-2 control-label">Title</label>
     <div class="col-sm-10">
       <p class="form-control-static">{{user.paperTitle}}</p>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Submission deadline</label>
+    <div class="col-sm-10">
+      <p class="form-control-static">{{deadlineDate}}</p>
     </div>
   </div>
   <div class="form-group">
@@ -89,7 +89,7 @@
         function displaytime(){
           serverDate.setSeconds(serverDate.getSeconds() + 1);
           var dateString =
-            pad(serverDate.getDate()) + ' ' +
+            serverDate.getDate() + ' ' +
             months[serverDate.getMonth()] + ' ' +
             serverDate.getFullYear();
 
@@ -99,17 +99,11 @@
             pad(serverDate.getSeconds());
 
           document.getElementById('servertime').innerHTML =
-            dateString + ' ' + timeString + ' UTC+01:00'
+            dateString + ', ' + timeString + ' UTC+01:00'
         }
 
         setInterval(displaytime, 1000);
       </script>
-    </div>
-  </div>
-    <div class="form-group">
-    <label class="col-sm-2 control-label">Submission deadline</label>
-    <div class="col-sm-10">
-      <p class="form-control-static">{{deadlineDate}}</p>
     </div>
   </div>
   <div class="form-group">

@@ -211,6 +211,9 @@ app.get('/upload', requireAuth, function index(req, res, next) {
       params.confirmed = true;
     }
   }
+  else {
+    params.alreadyUploaded = false;
+  }
 
   var isoDate = moment().tz('Europe/London').format('YYYY-MM-DD[T]HH:mm:ss');
   params.isoDate = isoDate;
