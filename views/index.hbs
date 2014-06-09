@@ -1,12 +1,131 @@
-<p class="lead">Welcome, <strong>{{user.name}}</strong>. Select your full paper file and click <strong>Submit</strong> to upload.</p>
+<p class="lead">Welcome, <strong>{{user.name}}</strong>.</p>
 
-<form role="form" class="form" method="POST" enctype="multipart/form-data" action="/upload?_csrf={{safeCsrf}}">
+{{#if confirmed}}
+<h2>Submission confirmed</h2>
+<p>You have already confirmed your submission, and you may not upload new versions.</p>
+<p><a class="btn btn-default" href="/review">View submission</a></p>
+
+{{else}}
+
+{{#if overdue}}
+
+<h2>No more submissions allowed</h2>
+<p>Unfortunately, the deadline for submissions has elapsed. As such, we are unable to accept your submission.</p>
+
+{{else}}
+
+{{#if true}}
+<h2>Confirm submission</h2>
+<p>You have previously uploaded a submission. Verify the correctness of your submission below and click <strong>Confirm submission</strong> to confirm. After confirming, you may not upload new versions.</p>
+
+<form class="form-horizontal" role="form" method="POST" action="/confirm">
   <div class="form-group">
-    <label for="inputFile">Full paper</label>
-    <input type="file" id="inputFile" name="file">
-    <p class="help-block">Must be less than 20 MB in size and in PDF, DOC, or DOCX format.</p>
+    <label class="col-sm-2 control-label">Author</label>
+    <div class="col-sm-10">
+      <p class="form-control-static">{{user.name}} ({{user.email}})</p>
+    </div>
   </div>
   <div class="form-group">
-    <button type="submit" class="btn btn-primary">Submit</button>
+    <label class="col-sm-2 control-label">Email</label>
+    <div class="col-sm-10">
+      <p class="form-control-static">{{user.email}}</p>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Title</label>
+    <div class="col-sm-10">
+      <p class="form-control-static">{{user.paperTitle}}</p>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Last submission</label>
+    <div class="col-sm-10">
+      <p class="form-control-static">{{lastSubmission}} (<a href="/review">View submission</a>)</p>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <input type="hidden" name="_csrf" value="{{csrf}}">
+      <button type="submit" class="btn btn-success">Confirm submission</button>
+    </div>
   </div>
 </form>
+
+
+{{/if}}
+
+<h2>Upload new version</h2>
+<p>Select your full paper file and click <strong>Submit</strong> to upload.</p>
+
+<form role="form" class="form-horizontal" method="POST" enctype="multipart/form-data" action="/upload?_csrf={{safeCsrf}}">
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Author</label>
+    <div class="col-sm-10">
+      <p class="form-control-static">{{user.name}} ({{user.email}})</p>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Title</label>
+    <div class="col-sm-10">
+      <p class="form-control-static">{{user.paperTitle}}</p>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Submission date</label>
+    <div class="col-sm-10">
+      <p class="form-control-static" id="servertime">{{currentDateTime}}</p>
+      <script>
+        // Server clock - modified from <http://www.javascriptkit.com/script/script2/servertime.shtml>
+        var months =
+          ['January', 'February', 'March', 'April',
+           'May', 'June', 'July', 'August', 'September',
+           'October', 'November', 'December'];
+        var serverDate = new Date('{{isoDate}}');
+
+        function pad(str) {
+          return (str.toString().length === 1) ? '0' + str : str;
+        }
+
+        function displaytime(){
+          serverDate.setSeconds(serverDate.getSeconds() + 1);
+          var dateString =
+            pad(serverDate.getDate()) + ' ' +
+            months[serverDate.getMonth()] + ' ' +
+            serverDate.getFullYear();
+
+          var timeString = 
+            pad(serverDate.getHours()) + ':' +
+            pad(serverDate.getMinutes()) + ':' +
+            pad(serverDate.getSeconds());
+
+          document.getElementById('servertime').innerHTML =
+            dateString + ' ' + timeString + ' UTC+01:00'
+        }
+
+        setInterval(displaytime, 1000);
+      </script>
+    </div>
+  </div>
+    <div class="form-group">
+    <label class="col-sm-2 control-label">Submission deadline</label>
+    <div class="col-sm-10">
+      <p class="form-control-static">{{deadlineDate}}</p>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="inputFile" class="col-sm-2 control-label">Full paper</label>
+    <div class="col-sm-10">
+      <input type="file" id="inputFile" name="file">
+      <p class="help-block">Must be less than 20 MB in size and in PDF, DOC, or DOCX format.</p>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <button type="submit" class="btn btn-success">Submit</button>
+    </div>
+  </div>
+</form>
+
+{{/if}}
+
+{{/if}}

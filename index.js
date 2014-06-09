@@ -1,10 +1,13 @@
 // isic-paper-upload
 
 // Modules
+var path = require('path');
 var config = require('config');
+var moment = require('moment-timezone');
 var formidable = require('formidable');
 var sha1 = require('sha1');
 var fse = require('fs-extra');
+var mime = require('mime');
 var express = require('express');
 var morgan = require('morgan');
 var bodyParser = require('body-parser');
@@ -159,58 +162,157 @@ app.post('/', function handleLogin(req, res, next) {
 
 app.get('/upload', requireAuth, function index(req, res, next) {
   var userDirName = getSubmissionDirName(req.user.email);
-  res.render('index', {
+
+  var params = {
     user: req.user,
     csrf: req.csrfToken(),
     safeCsrf: encodeURIComponent(req.csrfToken())
-  });
+  };
+
+  var error = req.query.error;
+
+  if (error === 'confirmed') {
+    params.confirmed = true;
+  }
+  else if (error === 'no_file') {
+    params.noFile = true;
+  }
+  else if (error === 'invalid') {
+    params.invalid = true;
+  }
+  else if (error) {
+    params.error = error;
+  }
+
+  var message = req.query.message;
+  if (message === 'uploaded') {
+    params.justUploaded = true;
+  }
+  else if (message === 'confirmed') {
+    params.justConfirmed = true;
+  }
+  else if (message) {
+    params.message = message;
+  }
+
+  var dirName = getSubmissionDirName(req.user.email);
+  var alreadyUploaded = fse.existsSync(config.uploadDir + '/' + dirName);  
+
+  if (alreadyUploaded) {
+    params.alreadyUploaded = true;
+
+    var stats = fse.statSync(config.uploadDir + '/' + dirName);
+    var lastSubmission =
+      moment(stats.mtime).tz('Europe/London')
+                         .format('D MMMM YYYY, HH:mm:ss [UTC]Z');
+    params.lastSubmission = lastSubmission;
+
+    if (fse.existsSync(config.uploadDir + '/' + dirName + '/confirmed.txt')) {
+      params.confirmed = true;
+    }
+  }
+
+  var isoDate = moment().tz('Europe/London').format('YYYY-MM-DD[T]HH:mm:ss');
+  params.isoDate = isoDate;
+
+  var nowDate = moment().tz('Europe/London')
+                  .format('D MMMM YYYY, HH:mm:ss [UTC]Z');
+  params.currentDateTime = nowDate;
+
+  var deadlineDate = moment(config.deadline).tz('Europe/London')
+                       .format('D MMMM YYYY, HH:mm:ss [UTC]Z');
+  params.deadlineDate = deadlineDate;
+
+  if (moment().isAfter(config.deadline)) {
+    params.overdue = true;
+  }
+
+  res.render('index', params);
 });
 
 app.post('/upload', requireAuth, function handleUpload(req, res, next) {
-  function uploadError(err) {
-    console.log(err);
-    var params = {
-      user: req.user,
-      csrf: req.csrfToken(),
-      safeCsrf: encodeURIComponent(req.csrfToken())
-    };
+  function render(err) {
+    res.redirect('/upload?error=' + err);
+  }
 
-    if (err === 'no_file') {
-      params.noFile = true;
-    }
-    else if (err === 'invalid') {
-      params.invalid = true;
-    }
-    else {
-      params.error = err;
-    }
-
-    res.render('index', params);
+  var newDirName = getSubmissionDirName(req.user.email);
+  if (fse.existsSync(config.uploadDir + '/' + newDirName + '/confirmed.txt')) {
+    return render('confirmed');
   }
 
   form.parse(req, function(err, fields, files) {
     var file = files.file;
     if (!file) {
-      return uploadError('no_file');
+      return render('no_file');
     }
 
     if (!validateFile(file)) {
-      return uploadError('invalid');
+      return render('invalid');
     }
 
     // Create a new file name using the author's name and paper title
     var lastDot = file.name.lastIndexOf('.');
-    var newDirName = getSubmissionDirName(req.user.email);
     var newFileName = newDirName + file.name.substring(lastDot);
+
+    try {
+      config.allowedExtensions.forEach(function(ext) {
+        fse.removeSync(config.uploadDir + '/' + newDirName + '/' +
+                       newDirName + '.' + ext);
+      });
+    }
+    catch (e) {
+
+    }
 
     fse.copy(file.path, config.uploadDir + '/' + newDirName + '/' + newFileName,
       function(err) {
         if (err) {
-          return uploadError(err);
+          return render(err);
         }
 
-        return res.render('upload', { justUploaded: true });
+        return res.redirect('/upload?message=uploaded');
       });
+  });
+});
+
+app.get('/review', requireAuth, function review(req, res, next) {
+  var newDirName = getSubmissionDirName(req.user.email);
+  var foundFilename;
+  try {
+    config.allowedExtensions.forEach(function(ext) {
+      var filename = config.uploadDir + '/' + newDirName + '/' +
+                     newDirName + '.' + ext;
+      if (fse.existsSync(filename)) {
+        foundFilename = filename;
+      }
+    });
+  }
+  catch (e) {
+
+  }
+
+  var basename = path.basename(foundFilename);
+  var mimetype = mime.lookup(foundFilename);
+  res.setHeader('Content-disposition',
+                'attachment; filename="' + basename + '"');
+  res.setHeader('Content-type', mimetype);
+
+  fse.createReadStream(foundFilename).pipe(res);
+});
+
+app.post('/confirm', requireAuth, function confirm(req, res, next) {
+  var newDirName = getSubmissionDirName(req.user.email);
+  var filename = config.uploadDir + '/' + newDirName + '/confirmed.txt';
+  var nowDate = moment().tz('Europe/London')
+                        .format('D MMMM YYYY, HH:mm:ss [UTC]Z');
+  var body = req.user.name + ' confirmed her/his submission on ' +
+             nowDate + '.';
+  fse.outputFile(filename, body, function(err) {
+    if (err) {
+      return res.redirect('/upload?error=confirm_fail');
+    }
+
+    return res.redirect('/upload?message=confirmed');
   });
 });
 

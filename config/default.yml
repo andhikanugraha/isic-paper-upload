@@ -1,3 +1,4 @@
+deadline: "2014-08-01T23:59:59+01:00"
 uploadDir: ./uploads
 maxFileSize: 2048576
 allowedExtensions:
