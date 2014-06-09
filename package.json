@@ -13,6 +13,7 @@
     "express": "^4.4.1",
     "express-session": "^1.2.1",
     "formidable": "^1.0.14",
+    "fs-extra": "^0.9.1",
     "hbs": "^2.7.0",
     "hiredis": "^0.1.17",
     "js-yaml": "^3.0.2",

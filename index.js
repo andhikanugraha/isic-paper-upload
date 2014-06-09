@@ -4,7 +4,7 @@
 var config = require('config');
 var formidable = require('formidable');
 var sha1 = require('sha1');
-var dropbox = require('dropbox');
+var fse = require('fs-extra');
 var express = require('express');
 var morgan = require('morgan');
 var bodyParser = require('body-parser');
@@ -21,6 +21,7 @@ var lessMiddleware = require('less-middleware');
 var users = {
   'someone@localhost': {
     name: 'John Doe',
+    paperTitle: 'An analysis of lorem ipsum',
     passwordHash: '59b3e8d637cf97edbe2384cf59cb7453dfe30789', // password
     salt: 'salt'
   }
@@ -29,12 +30,47 @@ var users = {
 // User functions
 function checkUserAuth(email, password) {
   var user = users[email];
+  if (!user) {
+    return false;
+  }
+
   var salt = user.salt;
   var saltedPassword = '' + salt + password;
   var saltedPasswordHash = sha1(saltedPassword);
 
   return user.passwordHash === saltedPasswordHash;
 }
+
+function filenameSafe(text) {
+  return text.replace(/[^a-zA-Z0-9 \-]/g, '');
+}
+
+function getSubmissionDirName(email) {
+  var user = users[email];
+  if (!user) {
+    return undefined;
+  }
+
+  return filenameSafe(user.name) + ' - ' + filenameSafe(user.paperTitle);
+}
+
+// Shared functions
+function validateFile(file) {
+  if (file.size > config.maxFileSize) {
+    return false;
+  }
+
+  var lastDot = file.name.lastIndexOf('.');
+  var extension = file.name.substring(lastDot + 1);
+  if (config.allowedExtensions.indexOf(extension) === -1) {
+    return false;
+  }
+
+  return true;
+}
+
+// Formidable initialisation
+var form = new formidable.IncomingForm();
 
 // Config initialisation
 if (!config.port) {
@@ -88,6 +124,7 @@ function requireAuth(req, res, next) {
   }
   else {
     req.user = users[req.session.email];
+    req.user.email = req.session.email;
     next();
   }
 }
@@ -105,7 +142,7 @@ app.get('/', function login(req, res, next) {
 
 app.post('/', function handleLogin(req, res, next) {
   // Display upload interface
-  var email = req.body.email;
+  var email = req.body.email.toLowerCase();
   var password = req.body.password;
 
   if (checkUserAuth(email, password)) {
@@ -121,28 +158,60 @@ app.post('/', function handleLogin(req, res, next) {
 });
 
 app.get('/upload', requireAuth, function index(req, res, next) {
+  var userDirName = getSubmissionDirName(req.user.email);
   res.render('index', {
     user: req.user,
     csrf: req.csrfToken(),
     safeCsrf: encodeURIComponent(req.csrfToken())
   });
-})
+});
 
 app.post('/upload', requireAuth, function handleUpload(req, res, next) {
-  // Display post-upload interface
-  var uploadErr = false;
-
-  if (uploadErr) {
-    res.render('index', {
-      error: uploadErr,
+  function uploadError(err) {
+    console.log(err);
+    var params = {
       user: req.user,
       csrf: req.csrfToken(),
       safeCsrf: encodeURIComponent(req.csrfToken())
-    });
+    };
+
+    if (err === 'no_file') {
+      params.noFile = true;
+    }
+    else if (err === 'invalid') {
+      params.invalid = true;
+    }
+    else {
+      params.error = err;
+    }
+
+    res.render('index', params);
   }
-  else {
-    res.render('upload', { justUploaded: true });
-  }
+
+  form.parse(req, function(err, fields, files) {
+    var file = files.file;
+    if (!file) {
+      return uploadError('no_file');
+    }
+
+    if (!validateFile(file)) {
+      return uploadError('invalid');
+    }
+
+    // Create a new file name using the author's name and paper title
+    var lastDot = file.name.lastIndexOf('.');
+    var newDirName = getSubmissionDirName(req.user.email);
+    var newFileName = newDirName + file.name.substring(lastDot);
+
+    fse.copy(file.path, config.uploadDir + '/' + newDirName + '/' + newFileName,
+      function(err) {
+        if (err) {
+          return uploadError(err);
+        }
+
+        return res.render('upload', { justUploaded: true });
+      });
+  });
 });
 
 // Error handler

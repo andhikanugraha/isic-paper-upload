@@ -1,0 +1,6 @@
+uploadDir: ./uploads
+maxFileSize: 2048576
+allowedExtensions:
+  - pdf
+  - doc
+  - docx
