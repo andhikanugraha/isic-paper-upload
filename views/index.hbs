@@ -1,7 +1,37 @@
 <p class="pull-right"><a href="/" class="btn btn-danger">Sign out</a></p>
 <p class="lead">Welcome, <strong>{{user.name}}</strong>.</p>
 
+{{#if justUploaded}}
+<div class="alert alert-success">
+  <strong>Success!</strong> Your paper was successfully uploaded.
+</div>
+{{/if}}
+
+{{#if justConfirmed}}
+<div class="alert alert-success">
+  <strong>Success!</strong> Your submission is now confirmed.
+</div>
+{{/if}}
+
+{{#if noFile}}
+<div class="alert alert-danger">
+  <strong>Error!</strong> The upload process failed &ndash; please try again.
+</div>
+{{/if}}
+
+{{#if invalid}}
+<div class="alert alert-danger">
+  <strong>Error!</strong> The document you uploaded did not meet our requirements.
+</div>
+{{/if}}
+
 {{#if confirmed}}
+<div class="alert alert-danger">
+  <strong>Error!</strong> You have already confirmed your submission &ndash; you may not upload new versions.
+</div>
+{{/if}}
+
+{{#if alreadyConfirmed}}
 <h3>Submission confirmed</h3>
 <p>You have already confirmed your submission, and you may not upload new versions.</p>
 <p><a class="btn btn-default" href="/review">View submission</a></p>
@@ -72,7 +102,7 @@
     </div>
   </div>
   <div class="form-group">
-    <label class="col-sm-2 control-label">Submission date</label>
+    <label class="col-sm-2 control-label">Current date and time</label>
     <div class="col-sm-10">
       <p class="form-control-static" id="servertime">{{currentDateTime}}</p>
       <script>

@@ -133,9 +133,15 @@ app.get('/', function login(req, res, next) {
   // Display login form
   req.session.email = undefined;
 
+  if (req.query.error) {
+    res.statusCode = 403; // Forbidden
+  }
+
   res.render('login', {
     csrf: req.csrfToken(),
-    noauth: req.query.error === 'noauth'
+    noauth: req.query.error === 'noauth',
+    invalidAuth: req.query.error === 'invalid_auth',
+    lastEmail: req.session.lastEmail
   });
 });
 
@@ -144,16 +150,15 @@ app.post('/', function handleLogin(req, res, next) {
   var email = req.body.email.toLowerCase();
   var password = req.body.password;
 
+  req.session.lastEmail = req.body.email;
+
   if (checkUserAuth(email, password)) {
     req.session.email = email;
-    res.redirect('/upload');
+    req.session.lastEmail = undefined;
+    return res.redirect('/upload');
   }
-  else {
-    res.render('login', {
-      error: 'invalid_auth',
-      csrf: req.csrfToken()
-    });
-  }
+
+  res.redirect('/?error=invalid_auth');
 });
 
 app.get('/upload', requireAuth, function index(req, res, next) {
@@ -168,12 +173,15 @@ app.get('/upload', requireAuth, function index(req, res, next) {
   var error = req.query.error;
 
   if (error === 'confirmed') {
+    res.statusCode = 403; // Forbidden
     params.confirmed = true;
   }
   else if (error === 'no_file') {
+    res.statusCode = 415; // Unsupported Media Type
     params.noFile = true;
   }
   else if (error === 'invalid') {
+    res.statusCode = 415; // Unsupported Media Type
     params.invalid = true;
   }
   else if (error) {
@@ -204,7 +212,7 @@ app.get('/upload', requireAuth, function index(req, res, next) {
     params.lastSubmission = lastSubmission;
 
     if (fse.existsSync(config.uploadDir + '/' + dirName + '/confirmed.txt')) {
-      params.confirmed = true;
+      params.alreadyConfirmed = true;
     }
   }
   else {
