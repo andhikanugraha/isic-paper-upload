@@ -7,7 +7,6 @@ var moment = require('moment-timezone');
 var formidable = require('formidable');
 var sha1 = require('sha1');
 var fse = require('fs-extra');
-var mime = require('mime');
 var express = require('express');
 var morgan = require('morgan');
 var bodyParser = require('body-parser');
@@ -297,12 +296,10 @@ app.get('/review', requireAuth, function review(req, res, next) {
   }
 
   var basename = path.basename(foundFilename);
-  var mimetype = mime.lookup(foundFilename);
   res.setHeader('Content-disposition',
                 'attachment; filename="' + basename + '"');
-  res.setHeader('Content-type', mimetype);
 
-  fse.createReadStream(foundFilename).pipe(res);
+  res.sendfile(foundFilename);
 });
 
 app.post('/confirm', requireAuth, function confirm(req, res, next) {
