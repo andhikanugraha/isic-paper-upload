@@ -20,14 +20,7 @@ var hbs = require('hbs');
 var lessMiddleware = require('less-middleware');
 
 // User data
-var users = {
-  'someone@localhost': {
-    name: 'John Doe',
-    paperTitle: 'An analysis of lorem ipsum',
-    passwordHash: '59b3e8d637cf97edbe2384cf59cb7453dfe30789', // password
-    salt: 'salt'
-  }
-};
+var users = require('./users');
 
 // User functions
 function checkUserAuth(email, password) {

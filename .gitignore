@@ -34,3 +34,5 @@ config/development.yml
 setup/credentials.csv
 setup/users.json
 uploads/
+
+users.json
