@@ -153,7 +153,7 @@ app.get('/', function login(req, res, next) {
     csrf: req.csrfToken(),
     noauth: req.query.error === 'noauth',
     invalidAuth: req.query.error === 'invalid_auth',
-    csrf: req.query.error === 'csrf',
+    invalidCsrf: req.query.error === 'csrf',
     lastEmail: req.session.lastEmail
   });
 });
