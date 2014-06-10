@@ -232,7 +232,11 @@ app.get('/upload', requireAuth, function index(req, res, next) {
 
 app.post('/upload', requireAuth, function handleUpload(req, res, next) {
   function render(err) {
-    res.redirect('/upload?error=' + err);
+    if (err) {
+      return res.redirect('/upload?error=' + err);
+    }
+
+    res.redirect('/upload?message=uploaded');
   }
 
   var newDirName = getSubmissionDirName(req.user.email);
@@ -271,7 +275,7 @@ app.post('/upload', requireAuth, function handleUpload(req, res, next) {
           return render(err);
         }
 
-        return res.redirect('/upload?message=uploaded');
+        render();
       });
   });
 });
