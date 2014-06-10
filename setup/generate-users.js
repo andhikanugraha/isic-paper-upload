@@ -111,7 +111,7 @@ function writeJson(users, destinationJson, callback) {
       salt: user.salt
     }
   });
-  fse.outputFile(destinationJson, JSON.stringify(users), callback);
+  fse.outputFile(destinationJson, JSON.stringify(jsonToWrite), callback);
 }
 
 function emailUsers(users, callback) {
