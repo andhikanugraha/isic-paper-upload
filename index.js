@@ -106,7 +106,14 @@ app.use(session({
   secret: config.secret,
   proxy: true
 }));
+
 app.use(csurf());
+app.use(function handleInvalidCsrf(err, req, res, next) {
+  if (err) {
+    res.redirect('/?error=csrf');
+  }
+});
+
 app.use(methodOverride());
 app.use('/css', lessMiddleware(
   __dirname + '/less',
@@ -146,6 +153,7 @@ app.get('/', function login(req, res, next) {
     csrf: req.csrfToken(),
     noauth: req.query.error === 'noauth',
     invalidAuth: req.query.error === 'invalid_auth',
+    csrf: req.query.error === 'csrf',
     lastEmail: req.session.lastEmail
   });
 });
@@ -331,7 +339,13 @@ app.post('/confirm', requireAuth, function confirm(req, res, next) {
   });
 });
 
-// Error handler
+app.use(function(req, res, next) {
+  res.statusCode = 404;
+  res.render('error',
+             { error: 'The page you are looking for cannot be found.' });
+});
+
+// Error handling
 if (app.get('env') == 'development') {
   app.use(errorHandler({
     dumpExceptions: true,
@@ -339,8 +353,9 @@ if (app.get('env') == 'development') {
   }));
 }
 else {
-  app.use(function handleError(req, res, next, err) {
-    res.send('Oops!');
+  app.use(function handleError(err, req, res, next) {
+    res.statusCode = err.status || 500;
+    res.render('error', { error: err.toString() });
   });
 }
 

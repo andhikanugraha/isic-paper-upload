@@ -6,6 +6,12 @@
 </div>
 {{/if}}
 
+{{#if csrf}}
+<div class="alert alert-danger">
+  <strong>Error!</strong> Invalid request. Please try again.
+</div>
+{{/if}}
+
 <form class="form-horizontal" role="form" method="POST" action="/">
   <div class="form-group">
     <label for="inputEmail" class="col-sm-2 control-label">Email</label>
