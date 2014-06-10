@@ -129,6 +129,11 @@ function requireAuth(req, res, next) {
 }
 
 // Actions
+app.get('/favicon.ico', function(req, res, next) {
+  res.redirect('http://static.wixstatic.com/ficons/' +
+               '89355b_8adb1bc8d31a9b11a84eec6107dc1b89_fi.ico');
+});
+
 app.get('/', function login(req, res, next) {
   // Display login form
   req.session.email = undefined;
