@@ -72,9 +72,6 @@ function validateFile(file) {
   return true;
 }
 
-// Formidable initialisation
-var form = new formidable.IncomingForm();
-
 // Config initialisation
 if (!config.port) {
   config.port = process.env.PORT || 3000;
@@ -243,6 +240,7 @@ app.post('/upload', requireAuth, function handleUpload(req, res, next) {
     return render('confirmed');
   }
 
+  var form = new formidable.IncomingForm();
   form.parse(req, function(err, fields, files) {
     var file = files.file;
     if (!file) {
