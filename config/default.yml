@@ -1,6 +1,8 @@
+url: http://localhost:3000/
+secret: defaultSecret
 deadline: "2014-08-01T23:59:59+01:00"
-uploadDir: ./uploads
-maxFileSize: 2048576
+uploadDir: ./uploads # this should point to a Dropbox shared folder
+maxFileSize: 20485760
 allowedExtensions:
   - pdf
   - doc

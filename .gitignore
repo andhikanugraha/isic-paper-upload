@@ -30,3 +30,7 @@ node_modules
 
 # Dev config
 config/development.yml
+
+setup/credentials.csv
+setup/users.json
+uploads/
