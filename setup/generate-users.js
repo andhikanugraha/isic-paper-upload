@@ -56,7 +56,8 @@ function parseCsv(sourceCsv, callback) {
 
   var row;
   parser.on('readable', function() {
-    while (row = parser.read()) {
+    row = parser.read();
+    while (row) {
       var password = randomstring.generate(10);
       var salt = randomstring.generate(30);
       var passwordHash = sha1(salt + password);
@@ -71,6 +72,7 @@ function parseCsv(sourceCsv, callback) {
       };
 
       users.push(user);
+      row = parser.read();
     }
   });
 
@@ -109,7 +111,7 @@ function writeJson(users, destinationJson, callback) {
       paperTitle: user.paperTitle,
       passwordHash: user.passwordHash,
       salt: user.salt
-    }
+    };
   });
   fse.outputFile(destinationJson, JSON.stringify(jsonToWrite), callback);
 }
@@ -143,7 +145,11 @@ function emailUsers(users, callback) {
   var template = handlebars.compile(templateSource);
 
   _.forEach(users, function(user) {
-    emailUser(user, template, mailQueue.push);
+    emailUser(user, template, function(task) {
+      mailQueue.push(task, function(err) {
+        console.error('Message could not be sent: %j', err);
+      });
+    });
   });
 }
 
@@ -169,12 +175,23 @@ function emailUser(user, template, sendMail) {
 
 function main() {
   var argv = require('minimist')(process.argv.slice(2));
+  if (_.isEmpty(config)) {
+    return console.error('No config detected. Please run from parent dir.');
+  }
+  if (argv.email && _.isEmpty(config.nodemailer)) {
+    return console.error('--email parameter was specified' +
+            'but no configuration for nodemailer was detected.');
+  }
+
+  console.log('Generating user credentials...');
   generateUsers(
     argv._[0] || __dirname + '/participants.csv',
     argv._[1] || __dirname + '/credentials.csv',
     argv._[2] || __dirname + '/users.json',
     function(err, users) {
+      console.log('User credentials generated.');
       if (argv.email) {
+        console.log('Emailing users...');
         emailUsers(users, function(err) {
           if (err) {
             return console.error(err);
