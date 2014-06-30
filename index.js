@@ -190,6 +190,9 @@ app.get('/upload', requireAuth, function index(req, res, next) {
     res.statusCode = 415; // Unsupported Media Type
     params.invalid = true;
   }
+  else if (error === 'incomplete') {
+    params.incomplete = true;
+  }
   else if (error) {
     params.error = error;
   }
@@ -259,6 +262,10 @@ app.post('/upload', requireAuth, function handleUpload(req, res, next) {
 
   var form = new formidable.IncomingForm();
   form.parse(req, function(err, fields, files) {
+    if (!fields.agree) {
+      return render('incomplete');
+    }
+
     var file = files.file;
     if (!file) {
       return render('no_file');
