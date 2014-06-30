@@ -320,7 +320,7 @@ app.get('/review', requireAuth, function review(req, res, next) {
   res.setHeader('Content-disposition',
                 'attachment; filename="' + basename + '"');
 
-  res.sendfile(foundFilename);
+  res.sendfile(path.resolve(foundFilename));
 });
 
 app.post('/confirm', requireAuth, function confirm(req, res, next) {
