@@ -92,12 +92,14 @@ app.set('view options', {layout: 'layouts/main'});
 
 // Middleware setup
 app.use(morgan('dev'));
-app.use(bodyParser());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(session({
   store: config.redis ? redisSessionStore : undefined,
   secret: config.secret,
-  proxy: true
+  proxy: true,
+  resave: true,
+  saveUninitialized: true
 }));
 
 app.use(csurf());
