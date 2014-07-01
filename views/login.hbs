@@ -2,7 +2,7 @@
 
 {{#if invalidAuth}}
 <div class="alert alert-danger">
-  <strong>Error!</strong> The username/password combination provided did not match.
+  <strong>Error!</strong> The paper ID/username/password combination provided did not match.
 </div>
 {{/if}}
 
@@ -14,16 +14,23 @@
 
 <form class="form-horizontal" role="form" method="POST" action="/">
   <div class="form-group">
+    <label for="inputEmail" class="col-sm-2 control-label">Paper ID</label>
+    <div class="col-sm-10">
+      <input type="number" class="form-control" id="inputEmail" placeholder="Paper ID" name="paperId" value="{{lastPaperId}}" required>
+      <p class="help-block">Use the paper ID provided to you by email.</p>
+    </div>
+  </div>
+  <div class="form-group">
     <label for="inputEmail" class="col-sm-2 control-label">Email</label>
     <div class="col-sm-10">
-      <input type="email" class="form-control" id="inputEmail" placeholder="Email" name="email">
+      <input type="email" class="form-control" id="inputEmail" placeholder="Email" name="email" value="{{lastEmail}}" required>
       <p class="help-block">Use the email address registered with the conference.</p>
     </div>
   </div>
   <div class="form-group">
     <label for="inputPassword" class="col-sm-2 control-label">Password</label>
     <div class="col-sm-10">
-      <input type="password" class="form-control" id="inputPassword" placeholder="Password" name="password">
+      <input type="password" class="form-control" id="inputPassword" placeholder="Password" name="password" required>
       <p class="help-block">You should have received your password by email. If you haven't, check your spam folder or contact us.</p>
     </div>
   </div>

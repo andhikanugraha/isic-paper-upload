@@ -64,8 +64,11 @@ function parseCsv(sourceCsv, callback) {
 
       var user = {
         email: row.email,
+        firstName: row.firstName,
+        lastName: row.lastName,
         name: row.name,
         paperTitle: row.paperTitle,
+        paperId: row.paperId || 0,
         password: password,
         salt: salt,
         passwordHash: passwordHash
@@ -103,17 +106,20 @@ function writeCsv(users, destinationCsv, callback) {
 }
 
 function writeJson(users, destinationJson, callback) {
-  var jsonToWrite = {};
+  var jsonToWrite = [];
   _.forEach(users, function(user) {
-    jsonToWrite[user.email] = {
+    jsonToWrite.push({
       email: user.email,
       name: user.name,
+      paperId: user.paperId,
       paperTitle: user.paperTitle,
       passwordHash: user.passwordHash,
       salt: user.salt
-    };
+    });
   });
-  fse.outputFile(destinationJson, JSON.stringify(jsonToWrite), callback);
+  fse.outputFile(destinationJson,
+    JSON.stringify(jsonToWrite, undefined, 2),
+    callback);
 }
 
 function emailUsers(users, callback) {

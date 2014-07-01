@@ -23,8 +23,8 @@ var lessMiddleware = require('less-middleware');
 var users = require('./users');
 
 // User functions
-function checkUserAuth(email, password) {
-  var user = users[email];
+function checkUserAuth(paperId, email, password) {
+  var user = findUser(email, paperId);
   if (!user) {
     return false;
   }
@@ -40,13 +40,14 @@ function filenameSafe(text) {
   return text.replace(/[^a-zA-Z0-9 \-]/g, '');
 }
 
-function getSubmissionDirName(email) {
-  var user = users[email];
+function getSubmissionDirName(user) {
   if (!user) {
     return undefined;
   }
 
-  return filenameSafe(user.name) + ' - ' + filenameSafe(user.paperTitle);
+  return filenameSafe(user.name) + ' - ' +
+         filenameSafe(user.paperId) + ' - ' +
+         filenameSafe(user.paperTitle);
 }
 
 // Shared functions
@@ -62,6 +63,22 @@ function validateFile(file) {
   }
 
   return true;
+}
+
+function findUser(email, paperId) {
+  var foundUser;
+  users.forEach(function(user) {
+    if (foundUser) {
+      return;
+    }
+
+    if (user.email.toLowerCase() === email.toLowerCase() &&
+        parseInt(user.paperId) === parseInt(paperId)) {
+      foundUser = user;
+    }
+  });
+
+  return foundUser;
 }
 
 // Config initialisation
@@ -120,12 +137,11 @@ app.use(serveStatic(__dirname + '/public'));
 
 // Custom middleware
 function requireAuth(req, res, next) {
-  if (!req.session.email) {
+  if (!req.session.email || !req.session.paperId) {
     res.redirect('/?error=unauth');
   }
   else {
-    req.user = users[req.session.email];
-    req.user.email = req.session.email;
+    req.user = findUser(req.session.email, req.session.paperId);
     next();
   }
 }
@@ -155,12 +171,15 @@ app.get('/', function login(req, res, next) {
 
 app.post('/', function handleLogin(req, res, next) {
   // Display upload interface
+  var paperId = parseInt(req.body.paperId);
   var email = req.body.email.toLowerCase();
   var password = req.body.password;
 
+  req.session.lastPaperId = req.body.paperId;
   req.session.lastEmail = req.body.email;
 
-  if (checkUserAuth(email, password)) {
+  if (checkUserAuth(paperId, email, password)) {
+    req.session.paperId = paperId;
     req.session.email = email;
     req.session.lastEmail = undefined;
     return res.redirect('/upload');
@@ -170,7 +189,7 @@ app.post('/', function handleLogin(req, res, next) {
 });
 
 app.get('/upload', requireAuth, function index(req, res, next) {
-  var userDirName = getSubmissionDirName(req.user.email);
+  var userDirName = getSubmissionDirName(req.user);
 
   var params = {
     user: req.user,
@@ -210,7 +229,7 @@ app.get('/upload', requireAuth, function index(req, res, next) {
     params.message = message;
   }
 
-  var dirName = getSubmissionDirName(req.user.email);
+  var dirName = getSubmissionDirName(req.user);
   var alreadyUploaded = fse.existsSync(config.uploadDir + '/' + dirName);  
 
   if (alreadyUploaded) {
@@ -257,7 +276,7 @@ app.post('/upload', requireAuth, function handleUpload(req, res, next) {
     res.redirect('/upload?message=uploaded');
   }
 
-  var newDirName = getSubmissionDirName(req.user.email);
+  var newDirName = getSubmissionDirName(req.user);
   if (fse.existsSync(config.uploadDir + '/' + newDirName + '/confirmed.txt')) {
     return render('confirmed');
   }
@@ -303,7 +322,7 @@ app.post('/upload', requireAuth, function handleUpload(req, res, next) {
 });
 
 app.get('/review', requireAuth, function review(req, res, next) {
-  var newDirName = getSubmissionDirName(req.user.email);
+  var newDirName = getSubmissionDirName(req.user);
   var foundFilename;
   try {
     config.allowedExtensions.forEach(function(ext) {
@@ -326,7 +345,7 @@ app.get('/review', requireAuth, function review(req, res, next) {
 });
 
 app.post('/confirm', requireAuth, function confirm(req, res, next) {
-  var newDirName = getSubmissionDirName(req.user.email);
+  var newDirName = getSubmissionDirName(req.user);
   var filename = config.uploadDir + '/' + newDirName + '/confirmed.txt';
   var nowDate = moment().tz('Europe/London')
                         .format('D MMMM YYYY, HH:mm:ss [UTC]Z');
