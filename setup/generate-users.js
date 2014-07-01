@@ -153,7 +153,11 @@ function emailUsers(users, callback) {
   _.forEach(users, function(user) {
     emailUser(user, template, function(task) {
       mailQueue.push(task, function(err) {
-        console.error('Message could not be sent: %j', err);
+        if (err) {
+          return console.error('Message could not be sent: %j', err);
+        }
+
+        console.log('Message sent to ' + user.email);
       });
     });
   });
