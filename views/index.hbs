@@ -85,8 +85,6 @@
 
 {{/if}}
 
-<div class="row">
-
 <p><a href="/paper-template.doc" class="btn btn-info">Download paper template</a> <a href="/guidelines.pdf" class="btn btn-info">Download paper guidelines</a></p>
 
 <h3>Upload new version</h3>
@@ -94,14 +92,8 @@
 
 <form role="form" class="form-horizontal" method="POST" enctype="multipart/form-data" action="/upload?_csrf={{safeCsrf}}">
   <div class="form-group">
-    <label class="col-sm-4 control-label">CMT ID</label>
-    <div class="col-sm-8">
-      <p class="form-control-static">{{user.paperId}}</p>
-    </div>
-  </div>
-  <div class="form-group">
-    <label class="col-sm-4 control-label">Author</label>
-    <div class="col-sm-8">
+    <label class="col-sm-2 control-label">Author</label>
+    <div class="col-sm-10">
       <p class="form-control-static">{{user.name}} ({{user.email}})</p>
     </div>
   </div>
@@ -118,14 +110,14 @@
     </div>
   </div>
   <div class="form-group">
-    <label class="col-sm-4 control-label">Submission deadline</label>
-    <div class="col-sm-8">
+    <label class="col-sm-2 control-label">Submission deadline</label>
+    <div class="col-sm-10">
       <p class="form-control-static">{{deadlineDate}}</p>
     </div>
   </div>
   <div class="form-group">
-    <label class="col-sm-4 control-label">Current date and time</label>
-    <div class="col-sm-8">
+    <label class="col-sm-2 control-label">Current date and time</label>
+    <div class="col-sm-10">
       <p class="form-control-static" id="servertime">{{currentDateTime}}</p>
       <script>
         // Server clock - modified from <http://www.javascriptkit.com/script/script2/servertime.shtml>
@@ -160,8 +152,8 @@
     </div>
   </div>
   <div class="form-group" style="margin-bottom: 0">
-    <label for="inputFile" class="col-sm-4 control-label">Full paper</label>
-    <div class="col-sm-8">
+    <label for="inputFile" class="col-sm-2 control-label">Full paper</label>
+    <div class="col-sm-10">
       <input type="file" id="inputFile" name="file" required accept="application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword">
       <div class="help-block">Uploads must be less than 20 MB in size and in DOC or DOCX format.</div>
     </div>
@@ -179,8 +171,6 @@
     </div>
   </div>
 </form>
-
-</div>
 
 </div>
 
